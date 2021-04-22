@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+function err_msg()
+{
+    echo -e "\x1B[31mError: ${@}\x1B[0m" >&2
+}
+
+function echo_do()
+{
+    echo -ne "\x1B[1;30m"
+    echo ${@}
+    ${@}
+    echo -e "\x1B[0m"
+}
+
+# Make sure this is a Git repository
+git rev-parse --is-inside-work-tree > /dev/null 2>&1
+RC=$?
+if [[ ${RC} -ne 0 ]]
+then
+    err_msg "Not a Git repository"
+    exit 1
+fi
+
+# Make sure we're at the top level
+ROOTDIR=$( git rev-parse --show-toplevel )
+if [[ ${PWD} != ${ROOTDIR} ]]
+then
+    cd ${ROOTDIR}
+fi
+
+# Get timestamp
+TIMESTAMP=$( git -c log.showSignature=false log --pretty=format:'%ai' --max-count=1 | cut -f -2 -d ' ' | tr -dc '[0-9]' )
+#echo "TIMESTAMP is ${TIMESTAMP}"
+
+# Sanity check
+if [[ ${#TIMESTAMP} -ne 14 ]]
+then
+    err_msg "\${TIMESTAMP} (\"${TIMESTAMP}\") not in CCYYMMDDhhmmSS format"
+    exit 1
+fi
+
+# Add period on the end
+TOUCHTIME=$( printf "%s.%s" ${TIMESTAMP:0:12} ${TIMESTAMP:12:2} )
+
+
+
+echo_do find . -exec touch -maht ${TOUCHTIME} {} \;
+echo_do touch -maht ${TOUCHTIME} . .git
