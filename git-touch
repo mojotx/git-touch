@@ -8,8 +8,8 @@ function err_msg()
 function echo_do()
 {
     echo -ne "\x1B[1;30m"
-    echo ${@}
-    ${@}
+    echo "${@}"
+    "${@}"
     echo -e "\x1B[0m"
 }
 
@@ -22,11 +22,11 @@ then
     exit 1
 fi
 
-# Make sure we're at the top level
+# Just to be safe, make sure we are at the top level
 ROOTDIR=$( git rev-parse --show-toplevel )
 if [[ ${PWD} != ${ROOTDIR} ]]
 then
-    cd ${ROOTDIR}
+    cd "${ROOTDIR}"
 fi
 
 # Get timestamp
@@ -45,5 +45,5 @@ TOUCHTIME=$( printf "%s.%s" ${TIMESTAMP:0:12} ${TIMESTAMP:12:2} )
 
 
 
-echo_do find . -exec touch -maht ${TOUCHTIME} {} \;
-echo_do touch -maht ${TOUCHTIME} . .git
+echo_do find "${ROOTDIR}" -exec touch -maht "${TOUCHTIME}" {} \;
+echo_do touch -maht "${TOUCHTIME}" "${ROOTDIR}" "${ROOTDIR}/.git"
